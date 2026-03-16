@@ -45,8 +45,6 @@ init();
 async function init() {
   wireEvents();
 
-document.querySelector(".sidebar-close")
-  .addEventListener("click", toggleSidebar);
   
   try {
     const response = await fetch(DATA_URL);

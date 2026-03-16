@@ -45,6 +45,9 @@ init();
 async function init() {
   wireEvents();
 
+document.querySelector(".sidebar-close")
+  .addEventListener("click", toggleSidebar);
+  
   try {
     const response = await fetch(DATA_URL);
     if (!response.ok) throw new Error(`Could not load ${DATA_URL}`);

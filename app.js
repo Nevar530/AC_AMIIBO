@@ -64,8 +64,15 @@ async function init() {
 }
 
 function wireEvents() {
-  els.toggleFiltersBtn.addEventListener("click", toggleSidebar);
-  els.clearFiltersBtn.addEventListener("click", clearFilters);
+  els.toggleFiltersBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleSidebar();
+  });
+
+  els.clearFiltersBtn.addEventListener("click", () => {
+    clearFilters();
+    closeSidebarOnMobile();
+  });
 
   els.searchInput.addEventListener("input", (e) => {
     state.filters.search = e.target.value.trim().toLowerCase();
@@ -84,6 +91,7 @@ function wireEvents() {
     els[elementKey].addEventListener("change", (e) => {
       state.filters[filterKey] = e.target.value;
       applyFilters();
+      closeSidebarOnMobile();
     });
   });
 
@@ -107,13 +115,31 @@ function wireEvents() {
   });
 
   els.closeModalBtn.addEventListener("click", closeModal);
+
   els.cardModal.addEventListener("click", (e) => {
     if (e.target.dataset.close === "true") closeModal();
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!document.body.classList.contains("sidebar-open")) return;
+
+    const clickedInsideSidebar = els.filterPanel.contains(e.target);
+    const clickedToggle = els.toggleFiltersBtn.contains(e.target);
+
+    if (!clickedInsideSidebar && !clickedToggle) {
+      closeSidebar();
+    }
   });
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       closeModal();
+      closeSidebar();
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    if (!isMobileView()) {
       closeSidebar();
     }
   });
@@ -202,14 +228,17 @@ function applyFilters(render = true) {
       return true;
     })
     .sort((a, b) => {
-      if (a.SERIES !== b.SERIES) return a.SERIES.localeCompare(b.SERIES, undefined, { numeric: true });
+      if (a.SERIES !== b.SERIES) {
+        return a.SERIES.localeCompare(b.SERIES, undefined, { numeric: true });
+      }
       return a.Number.localeCompare(b.Number, undefined, { numeric: true });
     });
 
   updateStats();
 
-  if (render) renderTable();
-  else {
+  if (render) {
+    renderTable();
+  } else {
     renderTable();
   }
 }
@@ -338,6 +367,16 @@ function toggleSidebar() {
 function closeSidebar() {
   els.filterPanel.classList.remove("is-open");
   document.body.classList.remove("sidebar-open");
+}
+
+function closeSidebarOnMobile() {
+  if (isMobileView()) {
+    closeSidebar();
+  }
+}
+
+function isMobileView() {
+  return window.innerWidth <= 960;
 }
 
 function loadOwnedMap() {
